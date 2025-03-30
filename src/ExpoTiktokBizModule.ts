@@ -1,11 +1,10 @@
 import { NativeModule, requireNativeModule } from 'expo';
-
-import { ExpoTiktokBizModuleEvents } from './ExpoTiktokBiz.types';
-
-declare class ExpoTiktokBizModule extends NativeModule<ExpoTiktokBizModuleEvents> {
-  PI: number;
-  hello(): string;
-  setValueAsync(value: string): Promise<void>;
+declare class ExpoTiktokBizModule extends NativeModule {
+  initialize(appId: string, tiktokAppId: string): Promise<boolean>;
+  trackEvent(
+    eventName: string,
+    properties: Record<string, any>
+  ): Promise<boolean>;
 }
 
 // This call loads the native module object from the JSI.
