@@ -1,0 +1,17 @@
+{
+  "platforms": [
+    "apple",
+    "android",
+    "web"
+  ],
+  "apple": {
+    "modules": [
+      "ExpoTiktokBizModule"
+    ]
+  },
+  "android": {
+    "modules": [
+      "expo.modules.tiktokbiz.ExpoTiktokBizModule"
+    ]
+  }
+}
