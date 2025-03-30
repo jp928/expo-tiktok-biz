@@ -1,6 +1,6 @@
 {
   "name": "expo-tiktok-biz",
-  "version": "0.1.0",
+  "version": "0.1.3",
   "description": "Integrate Tiktok bussiness SDK with Expo",
   "main": "build/index.js",
   "types": "build/index.d.ts",

@@ -20,7 +20,7 @@ public class ExpoTiktokBizModule: Module {
                 if success {
                     promise.resolve(true)
                 } else {
-                    promise.reject(error ?? <#default value#>)
+                    promise.reject(error!)
                 }
             }
         }.runOnQueue(.main)
