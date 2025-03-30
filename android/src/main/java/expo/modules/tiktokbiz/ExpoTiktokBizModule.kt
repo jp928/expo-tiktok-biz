@@ -3,7 +3,10 @@ package expo.modules.tiktokbiz
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import java.net.URL
-
+import expo.modules.kotlin.Promise
+import expo.modules.kotlin.exception.CodedException
+import expo.modules.kotlin.functions.Queues
+import com.bytedance.android.tiktok.TikTokBusinessSdk
 class ExpoTiktokBizModule : Module() {
   // Each module class must implement the definition function. The definition consists of components
   // that describes the module's functionality and behavior.
@@ -14,37 +17,60 @@ class ExpoTiktokBizModule : Module() {
     // The module will be accessible from `requireNativeModule('ExpoTiktokBiz')` in JavaScript.
     Name("ExpoTiktokBiz")
 
-    // Sets constant properties on the module. Can take a dictionary or a closure that returns a dictionary.
-    Constants(
-      "PI" to Math.PI
-    )
-
-    // Defines event names that the module can send to JavaScript.
-    Events("onChange")
-
-    // Defines a JavaScript synchronous function that runs the native code on the JavaScript thread.
-    Function("hello") {
-      "Hello world! 👋"
-    }
-
     // Defines a JavaScript function that always returns a Promise and whose native code
     // is by default dispatched on the different thread than the JavaScript runtime runs on.
-    AsyncFunction("setValueAsync") { value: String ->
+    AsyncFunction("initialize") { context: Context, appId: String, secret: String, promise: Promise ->
       // Send an event to JavaScript.
-      sendEvent("onChange", mapOf(
-        "value" to value
-      ))
-    }
+      val ttConfig = TikTokBusinessSdk.TTConfig(context)
+            .setAppId(appId)
+            .setTTAppId(secret)
 
-    // Enables the module to be used as a native view. Definition components that are accepted as part of
-    // the view definition: Prop, Events.
-    View(ExpoTiktokBizView::class) {
-      // Defines a setter for the `url` prop.
-      Prop("url") { view: ExpoTiktokBizView, url: URL ->
-        view.webView.loadUrl(url.toString())
+      TikTokBusinessSdk.initializeSdk(
+        ttConfig
+      )
+
+      TikTokBusinessSdk.startTrack()
+
+      promise.resolve(true)
+    }.runOnQueue(Queues.MAIN)
+
+
+    AsyncFunction("trackEvent") {eventName: String?, properties: ReadableMap?, promise: Promise ->
+      val eventInfo = TTBaseEvent.newBuilder(eventName)
+      val iterator = properties?.keySetIterator()
+      while (iterator != null && iterator.hasNextKey()) {
+          val key = iterator.nextKey()
+          when (properties.getType(key)) {
+              ReadableType.Boolean -> {
+                  val value = properties.getBoolean(key)
+                  eventInfo.addProperty(key, value)
+              }
+              ReadableType.Number -> {
+                  val value = properties.getDouble(key)
+                  eventInfo.addProperty(key, value)
+              }
+              ReadableType.String -> {
+                  val value = properties.getString(key)
+                  eventInfo.addProperty(key, value)
+              }
+              ReadableType.Null -> {
+                  eventInfo.addProperty(key, null)
+              }
+              ReadableType.Map -> {
+                  // Handle map if needed
+              }
+              ReadableType.Array -> {
+                  // Handle array if needed
+              }
+          }
       }
-      // Defines an event that the view can send to JavaScript.
-      Events("onLoad")
+      try {
+        TikTokBusinessSdk.trackTTEvent(eventInfo.build())
+        TikTokBusinessSdk.flush();
+        promise?.resolve(true)
+    } catch (e: Exception) {
+      promise?.reject("TIKTOK_TRACK_ERROR", e.message, e)
     }
+    }.runOnQueue(Queues.MAIN)
   }
 }
